@@ -29,9 +29,13 @@ Desarrollar una aplicación móvil multiplataforma utilizando Flutter para la ge
 
 - **Validación de Formularios:** Campos obligatorios con validación en tiempo real.
 
-## Desarrollador:
+## Desarrolladores:
 
-- [Luis Manuel - Desarrollador Full Stack](https://github.com/luismanuelcldev)
+- [Luis Manuel De La Cruz Ledesma - Desarrollador](https://github.com/luismanuelcldev)
+
+- [Adamil Felipe Abreu - Desarrollador](https://github.com/AdamilAbreu)
+
+
 
 ## Enlaces:
 
