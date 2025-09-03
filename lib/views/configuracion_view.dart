@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../widgets/theme_switch.dart';
 
+// Clase que representa la vista de configuración
 class ConfiguracionView extends StatelessWidget {
   const ConfiguracionView({super.key});
 
+  // Contiene el AppBar y el cuerpo con opciones de configuración
   @override
   Widget build(BuildContext context) {
     return Scaffold(
