@@ -1,3 +1,4 @@
+// Importaciones necesarias para la gestión de contactos
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/contacto.dart';
