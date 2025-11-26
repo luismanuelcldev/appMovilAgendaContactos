@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 import '../cubit/agenda_cubit.dart';
 import '../models/contacto.dart';
 
@@ -25,7 +26,7 @@ class _EditarContactoViewState extends State<EditarContactoView> {
   late TextEditingController _direccionController;
   late DateTime _fechaNacimiento;
   String _imagenUrl = '';
-  File? _imagenFile;
+  XFile? _imagenFile;
   bool _guardando = false;
 
   @override
@@ -42,9 +43,8 @@ class _EditarContactoViewState extends State<EditarContactoView> {
     _fechaNacimiento = contacto?.fechaNacimiento ?? DateTime.now();
     _imagenUrl = contacto?.imagenUrl ?? '';
 
-    if (_imagenUrl.isNotEmpty && !_imagenUrl.startsWith('http')) {
-      _imagenFile = File(_imagenUrl);
-    }
+    // No inicializamos _imagenFile desde _imagenUrl porque XFile requiere un path real o bytes,
+    // y si es una URL remota o base64, lo manejamos con _imagenUrl.
   }
 
   @override
@@ -57,15 +57,21 @@ class _EditarContactoViewState extends State<EditarContactoView> {
     super.dispose();
   }
 
-  Future<String> _guardarImagenLocalmente(File imagenFile) async {
+  Future<String> _guardarImagenLocalmente(XFile imagenFile) async {
     try {
       if (kIsWeb) {
-        return imagenFile.path;
+        final bytes = await imagenFile.readAsBytes();
+        final base64Image = base64Encode(bytes);
+        String mime = 'image/jpeg';
+        if (imagenFile.name.toLowerCase().endsWith('.png')) {
+          mime = 'image/png';
+        }
+        return 'data:$mime;base64,$base64Image';
       } else {
         final appDir = await getApplicationDocumentsDirectory();
         final fileName = 'contact_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final savedImage = await imagenFile.copy('${appDir.path}/$fileName');
-        return savedImage.path;
+        await imagenFile.saveTo('${appDir.path}/$fileName');
+        return '${appDir.path}/$fileName';
       }
     } catch (e) {
       debugPrint('Error al guardar imagen: $e');
@@ -73,11 +79,85 @@ class _EditarContactoViewState extends State<EditarContactoView> {
     }
   }
 
-  Future<void> _seleccionarImagen() async {
+  Future<void> _mostrarOpcionesImagen() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galería'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _seleccionarImagen(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Cámara'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _seleccionarImagen(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: const Text('URL de imagen'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _ingresarUrlImagen();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _ingresarUrlImagen() async {
+    final controller = TextEditingController();
+    await showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Ingresar URL de imagen'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'https://ejemplo.com/imagen.jpg',
+                labelText: 'URL',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (controller.text.isNotEmpty) {
+                    setState(() {
+                      _imagenUrl = controller.text;
+                      _imagenFile = null;
+                    });
+                  }
+                  Navigator.pop(context);
+                },
+                child: const Text('Aceptar'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _seleccionarImagen(ImageSource source) async {
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 70,
@@ -85,7 +165,7 @@ class _EditarContactoViewState extends State<EditarContactoView> {
 
       if (pickedFile != null) {
         setState(() {
-          _imagenFile = File(pickedFile.path);
+          _imagenFile = pickedFile;
 
           if (kIsWeb) {
             _imagenUrl = pickedFile.path;
@@ -226,7 +306,7 @@ class _EditarContactoViewState extends State<EditarContactoView> {
                   ),
                 ),
                 child: GestureDetector(
-                  onTap: _seleccionarImagen,
+                  onTap: _mostrarOpcionesImagen,
                   child: CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.blue[50],
@@ -368,9 +448,16 @@ class _EditarContactoViewState extends State<EditarContactoView> {
       if (kIsWeb) {
         return NetworkImage(_imagenFile!.path);
       } else {
-        return FileImage(_imagenFile!);
+        return FileImage(File(_imagenFile!.path));
       }
     } else if (_imagenUrl.isNotEmpty) {
+      if (_imagenUrl.startsWith('data:')) {
+        try {
+          return MemoryImage(base64Decode(_imagenUrl.split(',').last));
+        } catch (e) {
+          return null;
+        }
+      }
       return _imagenUrl.startsWith('http')
           ? NetworkImage(_imagenUrl)
           : (kIsWeb ? NetworkImage(_imagenUrl) : FileImage(File(_imagenUrl)));
