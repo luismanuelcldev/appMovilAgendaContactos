@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
+import 'dart:convert';
 import '../cubit/agenda_cubit.dart';
 import '../models/contacto.dart';
 
@@ -54,34 +57,14 @@ class DetalleContactoView extends StatelessWidget {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 6,
                         offset: const Offset(0, 3),
                       ),
                     ],
                   ),
                   child: ClipOval(
-                    child: Image.network(
-                      contacto.imagenUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.blue[800]!,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.person,
-                          size: 70,
-                          color: Colors.blue[800],
-                        );
-                      },
-                    ),
+                    child: _buildContactImage(contacto.imagenUrl),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -239,6 +222,56 @@ class DetalleContactoView extends StatelessWidget {
     );
   }
 
+  Widget _buildContactImage(String url) {
+    if (url.isEmpty) {
+      return Icon(Icons.person, size: 70, color: Colors.blue[800]);
+    }
+
+    ImageProvider? imageProvider;
+
+    if (url.startsWith('http')) {
+      String imageUrl = url;
+      if (kIsWeb) {
+        // Usar proxy para evitar problemas de CORS en web
+        imageUrl = 'https://corsproxy.io/?${Uri.encodeComponent(url)}';
+      }
+      imageProvider = NetworkImage(imageUrl);
+    } else if (url.startsWith('data:')) {
+      try {
+        imageProvider = MemoryImage(base64Decode(url.split(',').last));
+      } catch (e) {
+        debugPrint('Error decoding base64 image: $e');
+      }
+    } else {
+      if (kIsWeb) {
+        imageProvider = NetworkImage(url);
+      } else {
+        imageProvider = FileImage(File(url));
+      }
+    }
+
+    if (imageProvider == null) {
+      return Icon(Icons.person, size: 70, color: Colors.blue[800]);
+    }
+
+    return Image(
+      image: imageProvider,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[800]!),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Error loading detail image: $error');
+        return Icon(Icons.person, size: 70, color: Colors.blue[800]);
+      },
+    );
+  }
+
   Widget _buildInfoCard(IconData icon, String text) {
     return Container(
       width: double.infinity,
@@ -249,7 +282,7 @@ class DetalleContactoView extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
