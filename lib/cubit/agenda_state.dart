@@ -14,13 +14,13 @@ class AgendaState {
   // Mensaje de error si existe alguno
   final String? error;
 
-  // Termino de busqueda actual
+  // Término de búsqueda actual
   final String busqueda;
 
-  // Lista de contactos filtrados por busqueda
+  // Lista de contactos filtrados por búsqueda
   final List<Contacto>? contactosFiltrados;
 
-  // Indica si el tema oscuro esta activo
+  // Indica si el tema oscuro está activo
   final bool temaOscuro;
 
   // Constructor principal del estado
@@ -34,7 +34,7 @@ class AgendaState {
     this.temaOscuro = false,
   });
 
-  // Constructor por defecto que crea un estado inicial
+  // Constructor por defecto que crea un estado inicial vacío
   factory AgendaState.init() =>
       AgendaState(contactos: [], favoritos: [], cargando: false);
 
@@ -47,24 +47,31 @@ class AgendaState {
     String? busqueda,
     List<Contacto>? contactosFiltrados,
     bool? temaOscuro,
+    bool limpiarFiltro = false,
+    bool limpiarError = false,
   }) {
     return AgendaState(
       contactos: contactos ?? this.contactos,
       favoritos: favoritos ?? this.favoritos,
       cargando: cargando ?? this.cargando,
-      error: error ?? this.error,
+      // Si limpiarError es true, establezco error a null, sino uso el nuevo valor o mantengo el anterior
+      error: limpiarError ? null : (error ?? this.error),
       busqueda: busqueda ?? this.busqueda,
-      contactosFiltrados: contactosFiltrados ?? this.contactosFiltrados,
+      // Si limpiarFiltro es true, establezco contactosFiltrados a null
+      contactosFiltrados:
+          limpiarFiltro
+              ? null
+              : (contactosFiltrados ?? this.contactosFiltrados),
       temaOscuro: temaOscuro ?? this.temaOscuro,
     );
   }
 
-  // Verifica si un contacto esta marcado como favorito
+  // Verifica si un contacto está marcado como favorito
   bool esFavorito(String contactoId) {
     return favoritos.any((f) => f.contactoId == contactoId);
   }
 
-  // Obtiene la lista de contactos que se debe mostrar
+  // Obtiene la lista de contactos que se debe mostrar (filtrados o todos)
   List<Contacto> get contactosMostrados {
     return contactosFiltrados ?? contactos;
   }
