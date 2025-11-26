@@ -4,13 +4,31 @@ import 'package:go_router/go_router.dart';
 import '../cubit/agenda_cubit.dart';
 import '../widgets/contacto_item.dart';
 
-class ContactosView extends StatelessWidget {
+class ContactosView extends StatefulWidget {
   const ContactosView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final searchController = TextEditingController();
+  State<ContactosView> createState() => _ContactosViewState();
+}
 
+class _ContactosViewState extends State<ContactosView> {
+  late TextEditingController searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<AgendaCubit>();
+    searchController = TextEditingController(text: cubit.state.busqueda);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -117,7 +135,7 @@ class ContactosView extends StatelessWidget {
               Icons.people_outline,
               size: 60,
 
-              color: Colors.blue[800]!.withOpacity(0.5),
+              color: Colors.blue[800]!.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
