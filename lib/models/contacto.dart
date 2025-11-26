@@ -6,17 +6,15 @@ class Contacto {
   final String nombre;
   // Apellido(s) del contacto
   final String apellido;
-  // Direccion de correo electronico
+  // Dirección de correo electrónico
   final String email;
-  // Numero de telefono
+  // Número de teléfono
   final String telefono;
   // URL de la imagen de perfil
   final String imagenUrl;
-
   // Fecha de nacimiento del contacto
   final DateTime fechaNacimiento;
-
-  // Direccion fisica del contacto
+  // Dirección física del contacto
   final String direccion;
 
   // Constructor principal de Contacto
@@ -41,6 +39,7 @@ class Contacto {
     required DateTime fechaNacimiento,
     required String direccion,
   }) {
+    // Genero un ID único basado en el timestamp actual
     return Contacto(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       nombre: nombre,
@@ -64,6 +63,7 @@ class Contacto {
     DateTime? fechaNacimiento,
     String? direccion,
   }) {
+    // Retorno una nueva instancia con los valores actualizados o los existentes
     return Contacto(
       id: id ?? this.id,
       nombre: nombre ?? this.nombre,
@@ -80,23 +80,23 @@ class Contacto {
   factory Contacto.fromJson(Map<String, dynamic> json) {
     return Contacto(
       id:
-          // Intenta obtener el ID de diferentes fuentes
+          // Intento obtener el ID de diferentes fuentes (API o local)
           json['login']?['uuid'] ??
           json['id'] ??
           DateTime.now().millisecondsSinceEpoch.toString(),
-      // Maneja el nombre tanto de la API como del formato local
+      // Manejo el nombre tanto de la API como del formato local
       nombre: json['name']?['first'] ?? json['nombre'] ?? '',
       apellido: json['name']?['last'] ?? json['apellido'] ?? '',
       email: json['email'] ?? '',
       telefono: json['phone'] ?? json['telefono'] ?? 'No disponible',
       imagenUrl: json['picture']?['large'] ?? json['imagenUrl'] ?? '',
-      // Parsea la fecha de nacimiento de diferentes formatos
+      // Parseo la fecha de nacimiento de diferentes formatos
       fechaNacimiento: DateTime.parse(
         json['dob']?['date'] ??
             json['fechaNacimiento'] ??
             DateTime.now().toString(),
       ),
-      // Construye la dirección a partir de componentes o usa el valor directo
+      // Construyo la dirección a partir de componentes o uso el valor directo
       direccion:
           json['direccion'] ??
           '${json['location']?['street']?['number'] ?? ''} '
@@ -120,5 +120,6 @@ class Contacto {
     };
   }
 
+  // Getter para obtener el nombre completo
   String get nombreCompleto => '$nombre $apellido';
 }
