@@ -25,28 +25,30 @@ class AgendaCubit extends Cubit<AgendaState> {
   }) : super(AgendaState.init());
 
   // Verifica si un contacto es local (no proviene de la API)
-
   bool esContactoLocal(String id) {
     return !id.startsWith('api_');
   }
 
-  // Carga todos los contactos y favoritos desde los repositorios y actualiza el estado de la aplicacion
+  // Carga todos los contactos y favoritos desde los repositorios y actualiza el estado de la aplicación
   Future<void> cargarContactos() async {
+    // Emito estado de carga
     emit(state.copyWith(cargando: true));
     try {
+      // Obtengo datos de ambos repositorios
       final contactos = await contactoRepository.obtenerContactos();
       final favoritos = favoritoRepository.obtenerFavoritos();
-      // Actualiza el estado con los nuevos datos
+
+      // Actualizo el estado con los nuevos datos y limpio errores previos
       emit(
         state.copyWith(
           contactos: contactos,
           favoritos: favoritos,
           cargando: false,
-          error: null,
+          limpiarError: true,
         ),
       );
     } catch (e) {
-      // En caso de error, actualiza el estado con el mensaje de error
+      // En caso de error, actualizo el estado con el mensaje de error
       emit(state.copyWith(error: e.toString(), cargando: false));
     }
   }
@@ -56,20 +58,24 @@ class AgendaCubit extends Cubit<AgendaState> {
     emit(state.copyWith(cargando: true));
     try {
       await contactoRepository.agregarContacto(contacto);
+      // Recargo la lista completa para asegurar consistencia
       await cargarContactos();
     } catch (e) {
-      // En caso de error, actualiza el estado con el mensaje
+      // En caso de error, actualizo el estado con el mensaje
       emit(state.copyWith(error: e.toString(), cargando: false));
     }
   }
 
+  // Actualiza un contacto existente
   Future<void> actualizarContacto(Contacto contacto) async {
     emit(state.copyWith(cargando: true));
     try {
+      // Verifico si es un contacto local antes de editar
       if (esContactoLocal(contacto.id)) {
         await contactoRepository.actualizarContacto(contacto);
         await cargarContactos();
       } else {
+        // Emito error si se intenta editar un contacto de la API
         emit(
           state.copyWith(
             error: 'No se pueden editar contactos de la API',
@@ -87,11 +93,11 @@ class AgendaCubit extends Cubit<AgendaState> {
     emit(state.copyWith(cargando: true));
     try {
       if (esContactoLocal(id)) {
-        // Si es favorito, primero lo elimina de favoritos
+        // Si es favorito, primero lo elimino de la lista de favoritos
         if (state.esFavorito(id)) {
           await favoritoRepository.eliminarFavorito(id);
         }
-        // Elimina el contacto y recarga la lista
+        // Elimino el contacto y recargo la lista
         await contactoRepository.eliminarContacto(id);
         await cargarContactos();
       } else {
@@ -111,13 +117,15 @@ class AgendaCubit extends Cubit<AgendaState> {
   /// Realiza una búsqueda en los contactos basada en un texto
   void buscarContactos(String query) {
     if (query.isEmpty) {
-      // Si la busqueda esta vacia, limpia los filtros
-      emit(state.copyWith(busqueda: '', contactosFiltrados: null, error: null));
+      // Si la búsqueda está vacía, limpio los filtros y errores
+      emit(
+        state.copyWith(busqueda: '', limpiarFiltro: true, limpiarError: true),
+      );
       return;
     }
 
     final queryLower = query.toLowerCase();
-    // Filtra los contactos que coincidan con la búsqueda
+    // Filtro los contactos que coincidan con la búsqueda en nombre, teléfono o email
     final contactosFiltrados =
         state.contactos.where((contacto) {
           return contacto.nombreCompleto.toLowerCase().contains(queryLower) ||
@@ -125,31 +133,38 @@ class AgendaCubit extends Cubit<AgendaState> {
               contacto.email.toLowerCase().contains(queryLower);
         }).toList();
 
-    // Actualiza el estado con los resultados de la búsqueda
+    // Actualizo el estado con los resultados de la búsqueda
     emit(
       state.copyWith(
         busqueda: query,
         contactosFiltrados: contactosFiltrados,
         error:
             contactosFiltrados.isEmpty ? 'No se encontraron contactos' : null,
+        limpiarError: contactosFiltrados.isNotEmpty,
       ),
     );
   }
 
-  // Si ya es favorito lo elimina, si no lo es lo agrega
+  // Alterna el estado de favorito de un contacto
   Future<void> toggleFavorito(Contacto contacto) async {
     emit(state.copyWith(cargando: true));
     try {
       if (state.esFavorito(contacto.id)) {
-        // Si ya es favorito, lo elimina
+        // Si ya es favorito, lo elimino
         await favoritoRepository.eliminarFavorito(contacto.id);
       } else {
-        // Si no es favorito, lo agrega
+        // Si no es favorito, lo agrego
         await favoritoRepository.agregarFavorito(contacto.id);
       }
-      // Actualiza la lista de favoritos
+      // Actualizo la lista de favoritos en el estado
       final favoritos = favoritoRepository.obtenerFavoritos();
-      emit(state.copyWith(favoritos: favoritos, cargando: false, error: null));
+      emit(
+        state.copyWith(
+          favoritos: favoritos,
+          cargando: false,
+          limpiarError: true,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(error: e.toString(), cargando: false));
     }
@@ -159,17 +174,23 @@ class AgendaCubit extends Cubit<AgendaState> {
   Future<void> limpiarFavoritos() async {
     emit(state.copyWith(cargando: true));
     try {
-      // Elimina todos los favoritos
+      // Elimino todos los favoritos del repositorio
       await favoritoRepository.limpiarFavoritos();
-      // Actualiza la lista de favoritos (ahora vacía)
+      // Actualizo la lista de favoritos (ahora vacía)
       final favoritos = favoritoRepository.obtenerFavoritos();
-      emit(state.copyWith(favoritos: favoritos, cargando: false, error: null));
+      emit(
+        state.copyWith(
+          favoritos: favoritos,
+          cargando: false,
+          limpiarError: true,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(error: e.toString(), cargando: false));
     }
   }
 
-  /// Actualiza el estado del tema de la aplicacion
+  /// Actualiza el estado del tema de la aplicación
   void cambiarTema(bool temaOscuro) {
     emit(state.copyWith(temaOscuro: temaOscuro));
   }
