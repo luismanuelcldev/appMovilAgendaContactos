@@ -15,7 +15,7 @@ Desarrollar una aplicación móvil multiplataforma utilizando Flutter para la ge
 
 - **Búsqueda Inteligente:** Filtrado en tiempo real por nombre, apellido, teléfono o email con resultados instantáneos.
 
-- **Gestión de Imágenes:** Selección de fotos de perfil desde galería o cámara con compatibilidad multiplataforma.
+- **Gestión de Imágenes:** Selección de fotos de perfil desde galería, cámara o URL externa con compatibilidad multiplataforma.
 
 - **Integración API Externa:** Sincronización con RandomUser.me para obtener contactos de ejemplo en español.
 
@@ -158,7 +158,8 @@ Esto iniciará la aplicación en el emulador, dispositivo conectado o navegador 
 - **Busqueda en Tiempo Real:** Filtrado eficiente con debounce
 - **Validacion de Formularios:** Campos requeridos con mensajes personalizados
 - **Manejo de Errores:** Try-catch robusto con mensajes al usuario
-- **Compatibilidad Web:** Adaptaciones específicas para navegadores
+- **Compatibilidad Web:** Adaptaciones específicas para navegadores (incluyendo solución de CORS para imágenes)
+- **Código Documentado:** Totalidad del código fuente documentado para facilitar mantenimiento y escalabilidad
 
 ## Capturas de Funcionalidades
 
