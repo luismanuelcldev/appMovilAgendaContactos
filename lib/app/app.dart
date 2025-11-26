@@ -4,21 +4,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proyecto_final_agenda_contactos/cubit/agenda_cubit.dart';
 import 'router.dart';
 
-/// Widget principal que configura la aplicación
+// Widget principal que configura la aplicación
 class AppAgenda extends StatelessWidget {
-  // Constructor constante con key opcional
   const AppAgenda({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Utilizamos BlocBuilder para reconstruir la UI cuando cambia el estado
+    // Escucho el estado del Cubit para cambiar el tema dinámicamente
     return BlocBuilder<AgendaCubit, AgendaState>(
       builder: (context, state) {
-        // Configuramos MaterialApp con soporte para enrutamiento
+        // Configuro MaterialApp con soporte para enrutamiento
         return MaterialApp.router(
           title: 'Agenda de Contactos',
-          debugShowCheckedModeBanner: false, // Removemos el banner de debug
-          // Configuración del tema claro
+          debugShowCheckedModeBanner: false, // Oculto el banner de debug
+          // Configuro el tema claro
           theme: ThemeData.light().copyWith(
             colorScheme: ColorScheme.light(
               primary: Colors.blue[800]!,
@@ -31,7 +30,7 @@ class AppAgenda extends StatelessWidget {
             ),
           ),
 
-          // Configuracion del tema oscuro
+          // Configuro el tema oscuro
           darkTheme: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.dark(
               primary: Colors.blue[200]!,
@@ -42,19 +41,18 @@ class AppAgenda extends StatelessWidget {
               elevation: 4,
               iconTheme: const IconThemeData(color: Colors.white),
             ),
-
-            // Configuracion específica para las tarjetas en modo oscuro
-            cardTheme: CardTheme(
+            // Configuración específica para las tarjetas en modo oscuro
+            cardTheme: CardThemeData(
               color: Colors.grey[800],
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 4),
             ),
           ),
 
-          // Seleccion del tema basado en el estado
+          // Selecciono el tema basado en el estado del Cubit
           themeMode: state.temaOscuro ? ThemeMode.dark : ThemeMode.light,
 
-          // Configuracion del enrutador
+          // Asigno la configuración del enrutador
           routerConfig: router,
         );
       },
