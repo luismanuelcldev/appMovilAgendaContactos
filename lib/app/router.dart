@@ -1,39 +1,37 @@
 // Archivo de configuración de rutas y modelos de la aplicación
 import 'package:go_router/go_router.dart';
 import '../models/contacto.dart';
-
-// Importación de todas las vistas de la aplicación
 import '../views/configuracion_view.dart';
 import '../views/contactos_view.dart';
 import '../views/detalle_contacto_view.dart';
 import '../views/editar_contacto_view.dart';
 import '../views/favoritos_view.dart';
 
-/// Configuración principal del enrutador de la aplicación
+// Configuración principal del enrutador de la aplicación usando GoRouter
 final router = GoRouter(
   routes: [
-    // Ruta raiz - Pantalla principal de contactos
+    // Ruta raíz que muestra la lista de contactos
     GoRoute(
       path: '/',
       builder: (context, state) => const ContactosView(),
       routes: [
-        // Ruta para ver detalles de un contacto
+        // Ruta para ver los detalles de un contacto específico
         GoRoute(
           path: 'detalle/:id',
           builder: (context, state) {
-            // Extraemos el contacto pasado como parametro extra
+            // Extraigo el objeto Contacto de los argumentos extra
             final contacto = state.extra as Contacto;
             return DetalleContactoView(contacto: contacto);
           },
         ),
 
-        // Ruta para ver contactos favoritos
+        // Ruta para ver la lista de favoritos
         GoRoute(
           path: 'favoritos',
           builder: (context, state) => const FavoritosView(),
         ),
 
-        // Ruta para la pantalla de configuracion
+        // Ruta para la pantalla de configuración
         GoRoute(
           path: 'configuracion',
           builder: (context, state) => const ConfiguracionView(),
@@ -49,7 +47,7 @@ final router = GoRouter(
         GoRoute(
           path: 'editar/:id',
           builder: (context, state) {
-            // Extraemos el contacto a editar de los parámetros extra
+            // Extraigo el contacto a editar de los argumentos extra
             final contacto = state.extra as Contacto;
             return EditarContactoView(contacto: contacto);
           },
